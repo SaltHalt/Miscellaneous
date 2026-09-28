@@ -28,7 +28,6 @@ int parse_int(char*);
 
 int searchRotatedTimestamps(int nums_count, int* nums, int target) {
     int left_i = 0, right_i = nums_count -1;
-    bool inSortedArea = false;
     while (left_i < right_i){
         int mid_i = (right_i + left_i)/2;
         int left = nums[left_i];
@@ -54,7 +53,7 @@ int searchRotatedTimestamps(int nums_count, int* nums, int target) {
     }
     if(nums[left_i] == target){
         return left_i;
-    }else{
+    } else {
         return -1;
     }
 }

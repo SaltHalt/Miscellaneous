@@ -10,82 +10,21 @@ class Result {
      *  3. INTEGER k
      */
     
-    static class Task{
-        final int type;
-        final int quantity;
-        final int coolTime;
-        Task(int type, int quantity){
-            this.type = type;
-            this.quantity = quantity;
-            this.coolTime = -1; 
+    public static int calculateMinimumTimeUnits(List<Integer> tasks, int m, int k) {
+        if (tasks.isEmpty()){
+            return 0;
         }
-        Task(int type, int quantity, int coolTime){
-            this.type = type;
-            this.quantity = quantity;
-            this.coolTime = coolTime; 
-        }
-    }
-    
-    
-    private static PriorityQueue<Task> createTaskQueue(List<Integer> tasks){
-        Map<Integer, Integer> freq = new HashMap<>(tasks.size());
+        Map<Integer, Integer> freq = new HashMap<>();
         for (Integer t : tasks) freq.merge(t, 1, Integer::sum);
         
-        PriorityQueue<Task> queue = new PriorityQueue<>((a,b) -> b.quantity - a.quantity);
-        for (Map.Entry<Integer, Integer> entry : freq.entrySet()){
-            Task task = new Task(entry.getKey(), entry.getValue());
-            queue.add(task);
-        }
-        return queue;
-    }
-    
-    private static void releaseCooledTasks(PriorityQueue<Task> runnableTasks, Queue<Task> coolingTasks, int time){
-        while(!coolingTasks.isEmpty() && coolingTasks.element().coolTime <= time){
-            Task cooledTask = coolingTasks.remove();
-            runnableTasks.add(cooledTask);
-        }
-    }
-    
-    private static void dispatchTask(PriorityQueue<Task> runnableTasks, Queue<Task> coolingTasks, int time, int machines, int cooldown){
-        Task task = runnableTasks.remove();
-        if (task.quantity > machines){
-            coolingTasks.add(new Task(task.type, task.quantity - machines, time + cooldown));
-        } else {
-            int work = task.quantity;
-            while (!runnableTasks.isEmpty() && work < machines){
-                task = runnableTasks.remove();
-                work += task.quantity;
-            }
-            int remainingWork = work - machines;
-            if (remainingWork > 0){
-                // coolingTasks.add(new Task(task.type, remainingWork, time + cooldown));
-                runnableTasks.add(new Task(task.type, remainingWork));
-            }
-        }
-    }
-
-    public static int naive(List<Integer> tasks, int m, int k) {
-        return tasks.size() / m + 1;
-    }
-
-    public static int calculateMinimumTimeUnits(List<Integer> tasks, int m, int k) {
-        PriorityQueue<Task> runnableTasks = createTaskQueue(tasks);
-        Queue<Task> coolingTasks = new ArrayDeque<>();
-        int completedIterations = 0;
-
-        while(!runnableTasks.isEmpty() || !coolingTasks.isEmpty()){
-            // if (runnableTasks.isEmpty()){
-            //     completedIterations = coolingTasks.element().coolTime;
-            // }
-            releaseCooledTasks(runnableTasks, coolingTasks, completedIterations);
-            if(!runnableTasks.isEmpty()){
-                dispatchTask(runnableTasks, coolingTasks, completedIterations, m, k);
-            }
-            
-            completedIterations++;
-        }
-        // return naive(tasks, m, k);
-        return completedIterations;
+        int saturatedTimetable = (int) Math.ceil((double) tasks.size() / m);
+        
+        int highestFreq = Collections.max(freq.values());
+        int columnHeight = (int) Math.ceil((double) highestFreq / m) - 1;
+        int excessTasks = freq.values().stream().filter((f) -> f > columnHeight * m).map(f -> f - columnHeight * m).reduce(0, Integer::sum);
+        int bottomRowLength = (int) Math.ceil((double) excessTasks / m);
+        
+        return Math.max(saturatedTimetable, (k+1) * columnHeight + bottomRowLength);
     }
 
 }
